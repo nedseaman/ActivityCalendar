@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Calendar</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="calendar.css" />
+</head>
+
+<body>
+    <div class="button_frame">
+        <button id="create_event_modal_button">Create Event</button>
+        <button id="create_user_modal_button">Create User</button>
+        <button id="toggle_tags_button">Toggle Tags</button>
+    </div><br />
+    <div id="checkbox_frame">
+        <input type="checkbox" id="School_checkbox" name="checkbox" value="School" checked>
+        <label for="School_checkbox"> School</label>
+        <input type="checkbox" id="Club_checkbox" name="checkbox" value="Club" checked>
+        <label for="Club_checkbox"> Club</label>
+        <input type="checkbox" id="Work_checkbox" name="checkbox" value="Work" checked>
+        <label for="Work_checkbox"> Work</label>
+        <input type="checkbox" id="Sports_checkbox" name="checkbox" value="Sports" checked>
+        <label for="Sports_checkbox"> Sports</label>
+        <input type="checkbox" id="Meal_checkbox" name="checkbox" value="Meal" checked>
+        <label for="Meal_checkbox"> Meal</label>
+        <input type="checkbox" id="Leisure_checkbox" name="checkbox" value="Leisure" checked>
+        <label for="Leisure_checkbox"> Leisure</label>
+    </div><br />
+    <div class="button_frame">
+        <button id="previous_month_button">&#60; Previous Month</button>
+        <button id="next_month_button">Next Month &#62;</button>
+    </div><br />
+    <div class="button_frame">
+        <button id="login_modal_button">Log In</button>
+        <button id="logout_button">Log Out</button>
+    </div>
+    <div id="calendar_frame">
+        <h3 id="calendar_title">Calendar</h3>
+        <table id="calendar">
+            <thead id="calendar_head">
+                <tr>
+                    <td>Sunday</td>
+                    <td>Monday</td>
+                    <td>Tuesday</td>
+                    <td>Wednesday</td>
+                    <td>Thursday</td>
+                    <td>Friday</td>
+                    <td>Saturday</td>
+                </tr>
+            </thead>
+            <tbody id="calendar_body">
+            </tbody>
+        </table>
+    </div>
+    <div class="modal" id="login_modal">
+        <div class="modal_content">
+            <h2>Log In</h2>
+            <div>
+                Username: <input type="text" id="username" required />
+                Password: <input type="password" id="password" required />
+            </div><br />
+            <button id="login_button">Log In</button>
+        </div>
+    </div>
+    <div class="modal" id="create_user_modal">
+        <div class="modal_content">
+            <h2>Create User</h2>
+            <div>
+                New Username: <input type="text" id="new_username" minlength="1" maxlength="50" required />
+                New Password: <input type="password" id="new_password" minlength="1" maxlength="255" required />
+            </div><br />
+            <button id="create_user_button">Create User</button>
+        </div>
+    </div>
+    <div class="modal" id="create_event_modal">
+        <div class="modal_content">
+            <h2>Create Event</h2>
+            <div>
+                <div>
+                    Event Title: <input type="text" id="title" maxlength="100" required />
+                    Event Date: <input type="datetime-local" id="datetime" required />
+                </div><br />
+                <div>
+                    <input type="radio" name="tag" value="School" id="School" required/><label for="School">School</label>
+                    <input type="radio" name="tag" value="Club" id="Club"/><label for="Club">Club</label>
+                    <input type="radio" name="tag" value="Work" id="Work"/><label for="Work">Work</label>
+                    <input type="radio" name="tag" value="Sports" id="Sports"/><label for="Sports">Sports</label>
+                    <input type="radio" name="tag" value="Meal" id="Meal"/><label for="Meal">Meal</label>
+                    <input type="radio" name="tag" value="Leisure" id="Leisure"/><label for="Leisure">Leisure</label>
+                </div>
+            </div><br />
+            <button id="create_event_button">Create Event</button>
+        </div>
+    </div>
+    <div class="modal" id="event_details_modal">
+        <div class="modal_content">
+            <h2 id="event_details_title">Title</h2>
+            <div>
+                Event Date/Time: <div id="event_details_date_time"></div><br />
+                Tag: <div id="event_details_tag"></div>
+            </div><br />
+            <div>
+                <button id="edit_event_modal_button">Edit Event</button>
+                <button id="delete_event_button">Delete Event</button>
+                <input type="hidden" id="event_id" />
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="edit_event_modal">
+        <div class="modal_content">
+            <h2>Edit Event</h2>
+            <div>
+                Event Title: <input type="text" id="edit_title" maxlength="100" required />
+                Event Date: <input type="datetime-local" id="edit_datetime" required />
+                <input type="hidden" id="edit_event_id" />
+            </div><br />
+            <div>
+                <input type="radio" name="edit_tag" value="School" id="edit_School" required/><label for="edit_School">School</label>
+                <input type="radio" name="edit_tag" value="Club" id="edit_Club"/><label for="edit_Club">Club</label>
+                <input type="radio" name="edit_tag" value="Work" id="edit_Work"/><label for="edit_Work">Work</label>
+                <input type="radio" name="edit_tag" value="Sports" id="edit_Sports"/><label for="edit_Sports">Sports</label>
+                <input type="radio" name="edit_tag" value="Meal" id="edit_Meal"/><label for="edit_Meal">Meal</label>
+                <input type="radio" name="edit_tag" value="Leisure" id="edit_Leisure"/><label for="edit_Leisure">Leisure</label>
+            </div><br />
+            <button id="edit_event_button">Edit Event</button>
+        </div>
+    </div>
+
+    <script src="https://classes.engineering.wustl.edu/cse330/content/calendar.min.js"></script>
+    <script>
+
+        let modal;
+        let token;
+        let toggle_tags = true;
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        // For our purposes, we can keep the current month in a variable in the global scope
+        var currentMonth = new Month(2021, 9);
+
+        // This updateCalendar() function only alerts the dates in the currently specified month.  You need to write
+        // it to modify the DOM (optionally using jQuery) to display the days and weeks in the current month.
+        function updateCalendar() {
+            var weeks = currentMonth.getWeeks();
+            $("#calendar_body").empty();
+
+            $("#calendar_title").html(`<h3>${currentMonth.getDateObject(1).toString().match(/[A-Za-z]{3}/g)[1]} ${currentMonth.year}</h3>`);
+
+            for (var w in weeks) {
+                $("#calendar_body").append(`<tr id="week_${w}"></tr>`)
+                var days = weeks[w].getDates();
+                // days contains normal JavaScript Date objects.
+
+                for (var d in days) {
+                    console.log(days[d].toISOString().substring(5,7) - 1 != currentMonth.month)
+                    if(days[d].toISOString().substring(5,7) - 1 != currentMonth.month) {
+                        $(`#week_${w}`).append(`<td id="${days[d].toISOString().substring(0, 10)}" class="date_cell_grayed"><div class="date_cell_label">${days[d].toString().match(/[0-9]{2}/)}</div></td>`)
+                    } else {
+                        $(`#week_${w}`).append(`<td id="${days[d].toISOString().substring(0, 10)}" class="date_cell"><div class="date_cell_label">${days[d].toString().match(/[0-9]{2}/)}</div></td>`)
+                    }
+                    $(`#${days[d].toISOString().substring(0, 10)}`).append(`<div class="date_cell_events_container"></div>`)
+                }
+            }
+
+            updateEvents();
+        }
+
+        function updateEvents() {
+
+            //determine which boxes are checked
+            var checked = [];
+
+            var checkboxes = document.getElementsByName("checkbox");
+            for(var i = 0; i < checkboxes.length; i++) {
+                if(checkboxes[i].checked) {
+                    checked.push(checkboxes[i].value);
+                } else {
+                    checked.push('');
+                }
+            }
+            const data = { 'begin': currentMonth.getDateObject(1).toISOString().substring(0, 10) + "T00:00", 'end': currentMonth.nextMonth().getDateObject(0).toISOString().substring(0, 10) + "T23:59", 'tags': checked };
+
+            fetch("get_events.php", {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    dates = document.getElementsByClassName("date_cell_events_container");
+                    for (index in dates) {
+                        $(".date_cell_events_container").eq(index).empty();
+                    }
+                    if (data.success) {
+                        for (var index in data) {
+                            if (data[index]["date_time"] != undefined) {
+                                if(toggle_tags) {
+                                    $(`#${data[index]["date_time"].substring(0, 10)}`).children(".date_cell_events_container").append(`<div id="${data[index]["event_id"]}" class="${data[index]["tag"]}_event">${data[index]["title"]}</div>`);
+                                    $(`#${data[index]["event_id"]}`).click(showEventDetails);
+                                } else {
+                                    $(`#${data[index]["date_time"].substring(0, 10)}`).children(".date_cell_events_container").append(`<div id="${data[index]["event_id"]}" class="event">${data[index]["title"]}</div>`);
+                                    $(`#${data[index]["event_id"]}`).click(showEventDetails);
+                                }
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function updateToken() {
+            fetch("get_token.php", {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        token = data.token;
+                        $("#login_modal_button").hide();
+                        $("#logout_button").show();
+                    } else {
+                        $("#login_modal_button").show();
+                        $("#logout_button").hide();
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function showEventDetails(event) {
+
+            const data = { 'event_id': event.target.id };
+
+            fetch("get_event_details.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $("#event_details_title").html(data["title"]);
+                        $("#event_details_date_time").html(new Date(data["date_time"]).toString());
+                        $("#event_details_tag").html(data.tag)
+                        $("#event_id").val(event.target.id);
+                        modal = document.getElementById("event_details_modal");
+                        $("#event_details_modal").show()
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function editEventPrep(event) {
+
+            event_id = $("#event_id").val()
+            const data = { 'event_id': event_id };
+
+            fetch("get_event_details.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $("#edit_title").val(data.title);
+                        $("#edit_datetime").val(data.date_time.substring(0,16).replace(' ', 'T'));
+                        var radio_buttons = document.getElementsByName("edit_tag");
+                        for(var i = 0; i < radio_buttons.length; i++) {
+                            if(radio_buttons[i].value == data.tag) {
+                                $(`#edit_${data.tag}`).prop('checked', true);
+                            }
+                        }
+                        $("#edit_event_id").val(event_id);
+                        modal = document.getElementById("edit_event_modal");
+                        $("#event_details_modal").hide()
+                        $("#edit_event_modal").show()
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function toggleTags(event) {
+            toggle_tags = !toggle_tags;
+            if(toggle_tags) {
+                $("#checkbox_frame").show();
+            } else{
+                $("#checkbox_frame").hide();
+            }
+            updateEvents();
+        }
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            updateCalendar();
+            updateToken();
+        }, false);
+
+        document.getElementById("login_modal_button").addEventListener("click", function (event) {
+            document.getElementById("login_modal").style.display = "block";
+            modal = document.getElementById("login_modal");
+        }, false);
+
+        document.getElementById("create_user_modal_button").addEventListener("click", function (event) {
+            document.getElementById("create_user_modal").style.display = "block";
+            modal = document.getElementById("create_user_modal");
+        }, false);
+
+        document.getElementById("create_event_modal_button").addEventListener("click", function (event) {
+            document.getElementById("create_event_modal").style.display = "block";
+            modal = document.getElementById("create_event_modal");
+        }, false);
+
+        document.getElementById("edit_event_modal_button").addEventListener("click", editEventPrep, false);
+
+        document.getElementById("toggle_tags_button").addEventListener("click", toggleTags, false);
+
+        document.querySelector("input[id=School_checkbox]").addEventListener("change", updateEvents, false);
+        document.querySelector("input[id=Club_checkbox]").addEventListener("change", updateEvents, false);
+        document.querySelector("input[id=Work_checkbox]").addEventListener("change", updateEvents, false);
+        document.querySelector("input[id=Sports_checkbox]").addEventListener("change", updateEvents, false);
+        document.querySelector("input[id=Meal_checkbox]").addEventListener("change", updateEvents, false);
+        document.querySelector("input[id=Leisure_checkbox]").addEventListener("change", updateEvents, false);
+
+        document.getElementById("login_button").addEventListener("click", function (event) {
+
+            // get the username from the form
+            const username = document.getElementById("username").value;
+
+            // get the password from the form
+            const password = document.getElementById("password").value;
+
+            // Make a URL-encoded string for passing POST data:
+            const data = { 'user': username, 'pass': password };
+
+            fetch("login_ajax5.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateEvents();
+                        $("#login_modal_button").hide();
+                        $("#logout_button").show();
+                        $("#login_modal").hide();
+                        $("#username").val('');
+                        $("#password").val('')
+                        token = data.token;
+                        alert("Login Successful");
+                    } else {
+                        alert(`You were not logged in: ${data.message}`);
+                    }
+                })
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("create_user_button").addEventListener("click", function (event) {
+
+            // get the username from the form
+            const username = document.getElementById("new_username").value;
+
+            // get the password from the form
+            const password = document.getElementById("new_password").value;
+
+            // Make a URL-encoded string for passing POST data:
+            const data = { 'user': username, 'pass': password };
+
+            fetch("create_user_ajax5.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("User Creation Successful");
+                    } else {
+                        alert(`You did not successfully create a user: ${data.message}`);
+                    }
+                })
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("create_event_button").addEventListener("click", function (event) {
+            // get the title from the form
+            const title = document.getElementById("title").value;
+
+            // get the date & time from the form
+            const datetime = document.getElementById("datetime").value;
+
+            let tag;
+
+            var radio_buttons = document.getElementsByName('tag');
+            for(var i = 0; i < radio_buttons.length; i++) {
+                if(radio_buttons[i].checked) {
+                    tag = radio_buttons[i].value;
+                    break;
+                }
+            }
+
+            // Make a URL-encoded string for passing POST data:
+            const data = { 'title': title, 'datetime': datetime, 'tag': tag, 'token': (token ? token : null) };
+
+            fetch("create_event_ajax5.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $('input[name="tag"]').prop('checked', false);
+                        $("#title").val('');
+                        $("#datetime").val('');
+                        updateEvents();
+                        alert("Event successfully created.");
+                    } else {
+                        alert(`Failed to create an event: ${data.message}`)
+                    }
+                })
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("logout_button").addEventListener("click", function (event) {
+
+            fetch("logout_ajax5.php", {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        dates = document.getElementsByClassName("date_cell_events_container");
+                        for (index in dates) {
+                            $(".date_cell_events_container").eq(index).empty();
+                        }
+                        alert("Successful logout.");
+                        $("#login_modal_button").show();
+                        $("#logout_button").hide();
+                    }
+                })
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("delete_event_button").addEventListener("click", function (event) {
+
+            // event id
+            const event_id = $("#event_id").val();
+
+            // Make a URL-encoded string for passing POST data:
+            const data = { 'event_id': event_id, 'token': (token ? token : null) };
+
+            //event.target.id
+            fetch("delete_event_ajax5.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateEvents();
+                        $("#event_details_modal").hide();
+                        alert("Successful deletion.");
+                    } else {
+                        alert(`Failed to delete event: ${data.message}`)
+                    }
+
+                })
+                .catch(err => console.error(err));
+        });
+
+        //this is for editing the actual event
+        document.getElementById("edit_event_button").addEventListener("click", function (event) {
+            // get the title from the form
+            const title = document.getElementById("edit_title").value;
+
+            // get the date & time from the form
+            const datetime = document.getElementById("edit_datetime").value;
+
+            // event id
+            const event_id = document.getElementById("edit_event_id").value;
+
+            let tag;
+
+            var radio_buttons = document.getElementsByName('edit_tag');
+            for(var i = 0; i < radio_buttons.length; i++) {
+                if(radio_buttons[i].checked) {
+                    tag = radio_buttons[i].value;
+                    break;
+                }
+            }
+
+            // Make a json object for passing POST data:
+            const data = { 'title': title, 'datetime': datetime, 'tag': tag, 'token': (token ? token : null), 'event_id': event_id };
+
+            fetch("edit_event_ajax5.php", {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'content-type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateEvents();
+                        $("#edit_event_modal").hide();
+                        alert("Successfully edited.");
+                    } else {
+                        alert(`Failed to edit event: ${data.message}`)
+                    }
+
+                })
+                .catch(err => console.error(err));
+        });
+
+
+        // Change the month when the "next" button is pressed
+        document.getElementById("next_month_button").addEventListener("click", function (event) {
+            currentMonth = currentMonth.nextMonth(); // Previous month would be currentMonth.prevMonth()
+            updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+        }, false);
+
+        // Change the month when the "previous" button is pressed
+        document.getElementById("previous_month_button").addEventListener("click", function (event) {
+            currentMonth = currentMonth.prevMonth();
+            updateCalendar(); // Whenever the month is updated, we'll need to re-render the calendar in HTML
+        }, false);
+
+    </script>
+</body>
+
+</html>
